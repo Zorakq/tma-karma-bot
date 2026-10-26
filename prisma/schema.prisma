@@ -1,0 +1,64 @@
+// Схема базы данных Telegram Mini App «Карма».
+// База: SQLite (для мгновенного локального запуска без внешних сервисов).
+// Для продакшена можно перейти на PostgreSQL, заменив provider на "postgresql"
+// и указав соответствующую строку подключения в DATABASE_URL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// Пользователь Telegram: метаданные профиля и пользовательские настройки оформления.
+model User {
+  id          BigInt   @id // Telegram ID пользователя
+  username    String?
+  firstName   String
+  lastName    String?
+  photoUrl    String?
+  bio         String?
+  socialLinks String? // JSON-строка со списком ссылок на соцсети
+  customTheme String? // Акцентный цвет/тема профиля (например, HEX-цвет)
+  createdAt   DateTime @default(now())
+
+  @@map("users")
+}
+
+/// Чат Telegram (группа или супергруппа).
+model Chat {
+  id    BigInt  @id // Telegram Chat ID
+  title String?
+  type  String // "group" | "supergroup" | ...
+
+  @@map("chats")
+}
+
+/// Статистика участника в конкретном чате. Данные изолированы по чатам.
+model ChatMemberStats {
+  id           Int      @id @default(autoincrement())
+  chatId       BigInt
+  userId       BigInt
+  firstSeenAt  DateTime @default(now()) // Первое сообщение в этом чате
+  messageCount Int      @default(0)
+  karma        Int      @default(0)
+
+  @@unique([chatId, userId])
+  @@index([chatId, karma])
+  @@map("chat_member_stats")
+}
+
+/// Голос «за» или «против» участника. Кулдаун между голосами проверяется по createdAt.
+model Vote {
+  id        Int      @id @default(autoincrement())
+  chatId    BigInt
+  voterId   BigInt // Кто голосует
+  targetId  BigInt // За кого голосуют
+  voteType  Int // +1 или -1
+  createdAt DateTime @default(now())
+
+  @@index([chatId, voterId, targetId, createdAt])
+  @@map("votes")
+}

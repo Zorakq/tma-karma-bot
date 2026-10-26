@@ -1,0 +1,51 @@
+# Render Blueprint.
+# Подключите репозиторий в Render (New -> Blueprint), и он развернёт:
+#   - karma-server (web): REST API + раздача Mini App
+#   - karma-bot   (worker): Telegram-бот (long polling)
+#   - karma-db    (PostgreSQL)
+#
+# При деплое Render попросит ввести BOT_TOKEN (значения с sync: false).
+
+services:
+  # 1) REST API + статика Mini App
+  - type: web
+    name: karma-server
+    runtime: node
+    buildCommand: npm run db:push:pg && npm run build
+    startCommand: npm run start -w server
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
+      - key: BOT_TOKEN
+        sync: false
+      - key: INIT_DATA_MAX_AGE_SECONDS
+        value: "86400"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: karma-db
+          property: connectionString
+
+  # 2) Telegram-бот
+  - type: worker
+    name: karma-bot
+    runtime: node
+    buildCommand: npm run db:push:pg && npm run build
+    startCommand: npm run start -w bot
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
+      - key: BOT_TOKEN
+        sync: false
+      - key: WEBAPP_URL
+        value: https://karma-server.onrender.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: karma-db
+          property: connectionString
+
+databases:
+  - name: karma-db
+    databaseName: karma
+    user: karma
+    plan: free

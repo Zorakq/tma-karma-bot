@@ -1,0 +1,21 @@
+# Зависимости
+node_modules/
+
+# Сборка
+dist/
+build/
+
+# Переменные окружения
+.env
+.env.local
+
+# База данных SQLite
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+prisma/dev.db
+
+# Логи и прочее
+*.log
+.DS_Store
