@@ -13,6 +13,7 @@ services:
   - type: web
     name: karma-server
     runtime: node
+    plan: free
     buildCommand: npm run db:push:pg && npm run build
     startCommand: npm run start -w server
     healthCheckPath: /health
@@ -30,6 +31,7 @@ services:
   - type: worker
     name: karma-bot
     runtime: node
+    plan: free
     buildCommand: npm run db:push:pg && npm run build
     startCommand: npm run start -w bot
     envVars:
