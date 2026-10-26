@@ -19,6 +19,7 @@ export function registerCommands(bot: Bot): void {
 
   // /top — кнопка открытия рейтинга Mini App для текущего чата
   bot.command('top', async (ctx) => {
+    console.log(`[bot][top] команда /top, chat=${ctx.chat?.id}(${ctx.chat?.type})`);
     const chatId = ctx.chat?.id;
     if (!chatId) return;
 

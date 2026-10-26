@@ -17,6 +17,19 @@ export function startBot(): Bot {
     console.error('[bot] Ошибка при обработке апдейта:', err.error);
   });
 
+  // Отладка: логируем каждое входящее сообщение (текст, чат, сущности)
+  bot.use(async (ctx, next) => {
+    const m = ctx.message;
+    if (m) {
+      const entities = m.entities?.map((e) => e.type).join(',') ?? '';
+      const text = m.text ?? m.caption ?? '';
+      console.log(
+        `[bot][msg] chat=${ctx.chat?.id}(${ctx.chat?.type}) text=${JSON.stringify(text)} entities=[${entities}]`,
+      );
+    }
+    await next();
+  });
+
   // Регистрируем команды (/start, /top, /profile)
   registerCommands(bot);
 
