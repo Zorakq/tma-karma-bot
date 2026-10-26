@@ -24,3 +24,18 @@ app.listen(config.port, '0.0.0.0', () => {
 
 // Telegram-бот (long polling) в этом же процессе
 startBot();
+
+// Самопинг: бесплатный Render «усыпляет» сервис через 15 минут без входящих
+// запросов (исходящие запросы бота к Telegram не считаются). Поэтому раз в 10 минут
+// стучим в собственный /health, чтобы сервис не засыпал и бот отвечал круглосуточно.
+const externalUrl = process.env.RENDER_EXTERNAL_URL;
+if (externalUrl) {
+  const ping = () => {
+    fetch(`${externalUrl}/health`).catch(() => {
+      /* игнорируем — это лишь «будильник» */
+    });
+  };
+  ping();
+  setInterval(ping, 10 * 60 * 1000);
+  console.log('[server] Включён самопинг (защита от спячки бесплатного тарифа)');
+}
