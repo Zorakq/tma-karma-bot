@@ -252,9 +252,9 @@ hash       = HMAC_SHA256(key = secret_key, message = data_check_string)
 ### Важные замечания
 
 - **Privacy Mode** по-прежнему должен быть выключен в BotFather (`/setprivacy` → Disable).
-- **Бесплатная PostgreSQL на Render живёт 30 дней.** Для постоянной базы переключитесь на
-  бесплатные [Neon](https://neon.tech) или [Supabase](https://supabase.com) — достаточно
-  поменять `DATABASE_URL` на их `postgresql://...` строку (у обоих сервисов).
+- **База данных.** Render просит карту за собственную PostgreSQL, поэтому используйте бесплатную
+  [Neon](https://neon.tech) или [Supabase](https://supabase.com) (карта не нужна). Просто вставьте
+  их строку `postgresql://...` в `DATABASE_URL` у обоих сервисов.
 - Строка `postgres://...` от Render принимается Prisma как есть (при желании замените на `postgresql://`).
 - Бесплатные сервисы Render могут «засыпать» после простоя; бот на long polling сам
   поддерживает активность, а Mini App «проснётся» при первом открытии.

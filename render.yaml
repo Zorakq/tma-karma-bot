@@ -1,10 +1,12 @@
 # Render Blueprint.
-# Подключите репозиторий в Render (New -> Blueprint), и он развернёт:
+# Подключите репозиторий в Render (New -> Blueprint), и он развернёт два сервиса:
 #   - karma-server (web): REST API + раздача Mini App
 #   - karma-bot   (worker): Telegram-бот (long polling)
-#   - karma-db    (PostgreSQL)
 #
-# При деплое Render попросит ввести BOT_TOKEN (значения с sync: false).
+# База данных — НЕ Render (иначе попросит карту). Используйте бесплатный Neon/Supabase
+# и вставьте его строку подключения в DATABASE_URL при деплое (sync: false).
+#
+# При деплое Render попросит ввести BOT_TOKEN и DATABASE_URL.
 
 services:
   # 1) REST API + статика Mini App
@@ -22,9 +24,7 @@ services:
       - key: INIT_DATA_MAX_AGE_SECONDS
         value: "86400"
       - key: DATABASE_URL
-        fromDatabase:
-          name: karma-db
-          property: connectionString
+        sync: false
 
   # 2) Telegram-бот
   - type: worker
@@ -40,12 +40,4 @@ services:
       - key: WEBAPP_URL
         value: https://karma-server.onrender.com
       - key: DATABASE_URL
-        fromDatabase:
-          name: karma-db
-          property: connectionString
-
-databases:
-  - name: karma-db
-    databaseName: karma
-    user: karma
-    plan: free
+        sync: false
