@@ -23,6 +23,8 @@ services:
         value: development
       - key: BOT_TOKEN
         sync: false
+      - key: WEBAPP_URL
+        value: https://karma-server-niel.onrender.com
       - key: INIT_DATA_MAX_AGE_SECONDS
         value: "86400"
       - key: DATABASE_URL

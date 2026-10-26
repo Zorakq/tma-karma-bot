@@ -1,12 +1,16 @@
 // Логика бота, вынесенная из index.ts, чтобы её можно было запускать
 // как отдельно (локально), так и в одном процессе с сервером (на Render).
 import { Bot } from 'grammy';
+import { config } from './config';
 import { trackMessage } from './analytics';
 import { registerCommands } from './handlers';
 
 // Создаёт бота, регистрирует хэндлеры и запускает long polling (не блокируя процесс).
 export function startBot(): Bot {
-  const bot = new Bot(process.env.BOT_TOKEN ?? '');
+  const bot = new Bot(config.botToken);
+
+  // Для диагностики: показываем, какой адрес Mini App подставлен в кнопки
+  console.log(`[bot] WebApp URL: ${config.webappUrl || '(НЕ ЗАДАН — кнопки не будут работать)'}`);
 
   // Логируем ошибки, чтобы бот не падал из-за отдельного сбойного апдейта
   bot.catch((err) => {
