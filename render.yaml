@@ -13,12 +13,14 @@ services:
     name: karma-server
     runtime: node
     plan: free
-    buildCommand: npm run db:push:pg && npm run build
+    buildCommand: npm install --include=dev && npm run db:push:pg && npm run build
     startCommand: npm run start:render -w server
     healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
         value: 20.18.0
+      - key: NODE_ENV
+        value: development
       - key: BOT_TOKEN
         sync: false
       - key: INIT_DATA_MAX_AGE_SECONDS
