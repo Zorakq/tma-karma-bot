@@ -1,7 +1,6 @@
 // Доступ к данным и API Telegram WebApp.
-// Используем официальный SDK (@telegram-apps/sdk-react) и fallback на глобальный
-// объект window.Telegram.WebApp для максимальной совместимости.
-import { initData } from '@telegram-apps/sdk-react';
+// Используем только глобальный объект window.Telegram.WebApp (внедряется клиентом Telegram).
+// Это самый надёжный способ — он не зависит от версии и поведения SDK.
 
 // Пользователь из initData (упрощённый тип).
 export interface TgUser {
@@ -38,23 +37,11 @@ declare global {
 
 // Сырая строка initData — отправляется на сервер для HMAC-валидации.
 export function getRawInitData(): string {
-  try {
-    const raw = initData.raw();
-    if (raw) return raw;
-  } catch {
-    // Игнорируем и пробуем fallback
-  }
   return window.Telegram?.WebApp?.initData ?? '';
 }
 
 // Текущий пользователь Telegram.
 export function getCurrentUser(): TgUser | undefined {
-  try {
-    const user = initData.user();
-    if (user) return user as TgUser;
-  } catch {
-    // fallback ниже
-  }
   return window.Telegram?.WebApp?.initDataUnsafe?.user;
 }
 

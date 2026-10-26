@@ -1,17 +1,14 @@
 // Корневой компонент Mini App: вкладки «Рейтинг» и «Профиль».
 import { useEffect, useMemo, useState } from 'react';
-import { initData, useSignal } from '@telegram-apps/sdk-react';
-import { getCurrentUser, notifyReady } from './lib/telegram';
-import type { TgUser } from './lib/telegram';
+import { getCurrentUser, isInTelegram, notifyReady } from './lib/telegram';
 import { LeaderboardTab } from './components/LeaderboardTab';
 import { ProfileTab } from './components/ProfileTab';
 
 type Tab = 'top' | 'profile';
 
 export default function App() {
-  // Реактивно читаем пользователя из SDK (с fallback на window.Telegram)
-  const sdkUser = useSignal(initData.user);
-  const user: TgUser | undefined = (sdkUser as TgUser | undefined) ?? getCurrentUser();
+  // Читаем пользователя напрямую из window.Telegram.WebApp (надёжнее SDK)
+  const user = getCurrentUser();
 
   // Параметры запуска: ?chat_id=...&view=profile
   const chatId = useMemo(() => {
@@ -28,14 +25,31 @@ export default function App() {
     notifyReady();
   }, []);
 
+  // Строка диагностики — показывается в заглушках, чтобы понять, что именно не определилось
+  const debug = `user=${user ? user.id : 'нет'} | chatId=${chatId ?? 'нет'} | inTelegram=${isInTelegram()} | url="${window.location.search || '(пусто)'}"`;
+
   // Вне Telegram показываем заглушку с инструкцией
   if (!user) {
-    return <Placeholder emoji="🤖" title="Откройте приложение в Telegram" text="Это Telegram Mini App. Запустите бота в чате и нажмите кнопку /top или /profile." />;
+    return (
+      <Placeholder
+        emoji="🤖"
+        title="Откройте приложение в Telegram"
+        text="Это Telegram Mini App. Запустите бота в чате и нажмите кнопку /top или /profile."
+        debug={debug}
+      />
+    );
   }
 
   // Без chat_id (открыто не через команду в чате)
   if (!chatId) {
-    return <Placeholder emoji="💬" title="Чат не указан" text="Откройте Mini App через команду /top или /profile внутри чата." />;
+    return (
+      <Placeholder
+        emoji="💬"
+        title="Чат не указан"
+        text="Откройте Mini App через команду /top или /profile внутри чата."
+        debug={debug}
+      />
+    );
   }
 
   const myUserId = String(user.id);
@@ -82,12 +96,23 @@ function TabButton({
   );
 }
 
-function Placeholder({ emoji, title, text }: { emoji: string; title: string; text: string }) {
+function Placeholder({
+  emoji,
+  title,
+  text,
+  debug,
+}: {
+  emoji: string;
+  title: string;
+  text: string;
+  debug?: string;
+}) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 bg-tg-bg p-6 text-center text-tg-text">
       <div className="text-4xl">{emoji}</div>
       <h1 className="text-lg font-semibold">{title}</h1>
       <p className="text-sm text-tg-hint">{text}</p>
+      {debug && <p className="mt-2 break-all text-[10px] text-tg-hint opacity-60">{debug}</p>}
     </div>
   );
 }
