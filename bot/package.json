@@ -2,7 +2,8 @@
   "name": "@tma/bot",
   "version": "1.0.0",
   "private": true,
-  "main": "dist/index.js",
+  "main": "dist/bot.js",
+  "types": "dist/bot.d.ts",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",

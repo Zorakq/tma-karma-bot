@@ -5,6 +5,7 @@ export const config = {
   port: Number(process.env.PORT ?? 3000),
   botToken: (process.env.BOT_TOKEN ?? '').trim(),
   databaseUrl: process.env.DATABASE_URL ?? '',
-  // Путь к собранному webapp для раздачи статики в продакшене
-  webappDist: process.env.WEBAPP_DIST ?? resolve(process.cwd(), '../webapp/dist'),
+  // Путь к собранному webapp для раздачи статики в продакшене.
+  // Отсчитываем от расположения этого файла, чтобы не зависеть от текущей рабочей директории.
+  webappDist: process.env.WEBAPP_DIST ?? resolve(__dirname, '../../webapp/dist'),
 };

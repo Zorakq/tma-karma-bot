@@ -222,48 +222,47 @@ hash       = HMAC_SHA256(key = secret_key, message = data_check_string)
 Самый простой способ получить рабочего бота с постоянным HTTPS-адресом. Проект уже
 подготовлен: есть `render.yaml` (Blueprint) и PostgreSQL-схема (`prisma/schema.postgres.prisma`).
 
-### Способ 1 — Blueprint (в один клик)
+Архитектура на Render — **один web-сервис**, внутри которого крутятся и API/Mini App, и бот
+(бесплатный тариф Render не поддерживает отдельные background worker, поэтому они объединены
+в одном процессе — см. `server/src/render.ts`).
+
+### Шаг 1 — бесплатная база данных Neon
+
+1. Зарегистрируйтесь на [neon.tech](https://neon.tech) (через GitHub).
+2. Создайте проект (бесплатный тариф, карта не нужна).
+3. Скопируйте строку подключения вида `postgresql://...`.
+
+### Шаг 2 — деплой через Blueprint
 
 1. Загрузите проект в GitHub-репозиторий (любой, можно приватный).
 2. В [Render](https://render.com) → **New → Blueprint** → подключите репозиторий.
-3. Render прочитает `render.yaml` и попросит ввести `BOT_TOKEN` — вставьте токен бота.
-4. Render создаст три ресурса:
-   - `karma-server` (web) — REST API + Mini App;
-   - `karma-bot` (worker) — Telegram-бот;
-   - `karma-db` — PostgreSQL.
-5. После деплоя откройте web-сервис `karma-server` и скопируйте его URL
-   (`https://karma-server.onrender.com` или похожий). Если он отличается от значения
-   `WEBAPP_URL` у worker-сервиса — обновите `WEBAPP_URL` в настройках `karma-bot` и перезапустите его.
-6. Готово. Отправьте боту `/top` в Telegram.
+3. Render прочитает `render.yaml` и создаст **один** сервис `karma-server`.
+4. При деплое Render попросит ввести два значения:
+   - `BOT_TOKEN` — токен бота;
+   - `DATABASE_URL` — строка подключения из Neon (шаг 1).
+5. Нажмите **Apply** и дождитесь статуса **Live**.
 
-### Способ 2 — вручную (без Blueprint)
+### Шаг 3 — проверка
 
-1. **PostgreSQL**: Render → **New → PostgreSQL** → скопируйте **Internal Connection String**.
-2. **Web Service** (из репозитория):
-   - Build command: `npm run db:push:pg && npm run build`
-   - Start command: `npm run start -w server`
-   - Env: `DATABASE_URL` (из п.1), `BOT_TOKEN`.
-3. **Background Worker** (из репозитория):
-   - Build command: `npm run db:push:pg && npm run build`
-   - Start command: `npm run start -w bot`
-   - Env: `DATABASE_URL`, `BOT_TOKEN`, `WEBAPP_URL` (URL web-сервиса из п.2).
-4. Готово. Проверьте `/top`.
+1. Откройте `karma-server` → скопируйте его URL (`https://karma-server.onrender.com`).
+2. В логах сервиса найдите строку `[bot] Запущен как @ваш_бот`.
+3. Отправьте боту `/top` в Telegram.
+   (`WEBAPP_URL` настраивать не нужно — бот берёт адрес сервиса из `RENDER_EXTERNAL_URL`.)
 
 ### Важные замечания
 
-- **Privacy Mode** по-прежнему должен быть выключен в BotFather (`/setprivacy` → Disable).
-- **База данных.** Render просит карту за собственную PostgreSQL, поэтому используйте бесплатную
-  [Neon](https://neon.tech) или [Supabase](https://supabase.com) (карта не нужна). Просто вставьте
-  их строку `postgresql://...` в `DATABASE_URL` у обоих сервисов.
-- Строка `postgres://...` от Render принимается Prisma как есть (при желании замените на `postgresql://`).
+- **Privacy Mode** должен быть выключен в BotFather (`/setprivacy` → Disable).
+- **Карта на Render** — нужна для верификации аккаунта (временное удержание ~$1, возвращается).
+  Оставайтесь на плане **Free**.
+- **База данных** — Neon бесплатна без карты. Для смены БД достаточно поменять `DATABASE_URL`.
 - Бесплатные сервисы Render могут «засыпать» после простоя; бот на long polling сам
   поддерживает активность, а Mini App «проснётся» при первом открытии.
 
 ### Деплой на другой хостинг (VPS, Railway, Fly.io)
 
 `npm run build` собирает всё, а `server` в продакшене сам раздаёт `webapp/dist` как статику.
-Достаточно: собрать проект, указать `DATABASE_URL` (PostgreSQL), `BOT_TOKEN`, `WEBAPP_URL`
-(публичный домен) и запустить `npm run start -w server` (API+Mini App) и `npm run start -w bot` (бот).
+Достаточно: собрать проект, указать `DATABASE_URL` (PostgreSQL) и `BOT_TOKEN`, затем запустить
+`npm run start:render -w server` (один процесс: API + Mini App + бот).
 
 ---
 

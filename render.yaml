@@ -1,21 +1,20 @@
 # Render Blueprint.
-# Подключите репозиторий в Render (New -> Blueprint), и он развернёт два сервиса:
-#   - karma-server (web): REST API + раздача Mini App
-#   - karma-bot   (worker): Telegram-бот (long polling)
+# Подключите репозиторий в Render (New -> Blueprint), и он развернёт ОДИН web-сервис:
+#   - karma-server: REST API + Mini App + Telegram-бот (все в одном процессе)
 #
-# База данных — НЕ Render (иначе попросит карту). Используйте бесплатный Neon/Supabase
-# и вставьте его строку подключения в DATABASE_URL при деплое (sync: false).
+# База данных — бесплатный Neon/Supabase (Render за свою БД просит карту).
+# Вставьте его строку подключения в DATABASE_URL при деплое.
 #
-# При деплое Render попросит ввести BOT_TOKEN и DATABASE_URL.
+# Бесплатный тариф Render не поддерживает background worker, поэтому бот запускается
+# внутри web-сервиса (см. server/src/render.ts).
 
 services:
-  # 1) REST API + статика Mini App
   - type: web
     name: karma-server
     runtime: node
     plan: free
     buildCommand: npm run db:push:pg && npm run build
-    startCommand: npm run start -w server
+    startCommand: npm run start:render -w server
     healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
@@ -24,22 +23,5 @@ services:
         sync: false
       - key: INIT_DATA_MAX_AGE_SECONDS
         value: "86400"
-      - key: DATABASE_URL
-        sync: false
-
-  # 2) Telegram-бот
-  - type: worker
-    name: karma-bot
-    runtime: node
-    plan: free
-    buildCommand: npm run db:push:pg && npm run build
-    startCommand: npm run start -w bot
-    envVars:
-      - key: NODE_VERSION
-        value: 20.18.0
-      - key: BOT_TOKEN
-        sync: false
-      - key: WEBAPP_URL
-        value: https://karma-server.onrender.com
       - key: DATABASE_URL
         sync: false
